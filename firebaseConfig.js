@@ -1,5 +1,5 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier } from "firebase/auth";  // Authentication için
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJPsv4CDtB4uz2_cvWIbWcYWJILXwtS_o",
@@ -11,27 +11,10 @@ const firebaseConfig = {
   measurementId: "G-KWN3HJ761H"
 };
 
-// Firebase'i başlatıyoruz
+// Firebase uygulamasını başlat
 const app = initializeApp(firebaseConfig);
 
-// Authentication servisini alıyoruz
+// Authentication örneğini oluştur
 const auth = getAuth(app);
 
-// reCAPTCHA doğrulamasını başlatmak için fonksiyon
-export const configureRecaptcha = () => {
-  if (typeof window !== 'undefined') {
-    window.recaptchaVerifier = new RecaptchaVerifier(
-      'recaptcha-container',  // Bu id ile bir HTML elemanı oluşturacağız
-      {
-        size: 'invisible',  // Görünmez olacak
-        callback: (response) => {
-          // reCAPTCHA doğrulama başarılı olursa çağrılacak
-          console.log("reCAPTCHA doğrulandı!");
-        },
-      },
-      auth
-    );
-  }
-};
-
-export { app, auth };
+export { auth };
