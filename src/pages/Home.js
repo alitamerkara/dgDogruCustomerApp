@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { auth } from '../../firebaseConfig';
-import WarningButton from '../utils/WarningButton';
-import SuccessButton from '../utils/SuccessButton';
+import Checkbox from 'expo-checkbox';
+import InfoButton from '../utils/InfoButton';
+import { Dropdown } from 'react-native-element-dropdown';
 
 const Home = ({ navigation }) => {
     const [name, setName] = useState('');
@@ -12,14 +13,43 @@ const Home = ({ navigation }) => {
     const [phone, setPhone] = useState('');
     const [labelName, setLabelName] = useState('');
     const [address, setAddress] = useState('');
+    const [secondAddress, setSecondAddress] = useState('');
     const [location, setLocation] = useState(null);
+    const [isChecked, setChecked] = useState(false);
+    const [checkBox, setCheckBox] = useState(false);
+    const [conditions, setConditions] = useState(false);
+    const [isMapLoading, setIsMapLoading] = useState(true); 
+    const [isFocus, setIsFocus] = useState(false);
+    const [type, setType] = useState('');
+    const [date, setDate] = useState('');
+    const [wasteOil, setWasteOil] = useState('');
 
     const save = async () => {
-        // Alert.alert('Kaydedildi', 'Tebrikler, bilgileriniz kaydedildi.');
-        console.log(location)
+        Alert.alert('Kaydedildi', 'Tebrikler, bilgileriniz kaydedildi.');
+        console.log(secondAddress , address);
     };
-
-    // Lokasyon izni isteme ve konumu alma
+    const types= [
+        { label: 'Günlük Yemek', value: 'Günlük Yemek' },
+        { label: 'Fast-Food', value: 'Fast-Food' },
+        { label: 'Cafe', value: 'Cafe' },
+        { label: 'Sokak Yemekleri', value: 'Sokak Yemekleri' },
+        { label: 'Meyhane', value: 'Meyhane' },
+        { label: 'Bar/Pub', value: 'Bar/Pub'},
+        { label: 'Balık Restoran', value: 'Balık Restoran' },
+        { label: 'Kebap', value: 'Kebap' },
+        { label: 'Steakhouse', value: 'Steakhouse' },
+        { label: 'Vejeteryan ', value: 'Vejeteryan ' },
+        { label: 'Fırın', value: 'Fırın' },
+        { label: 'Esnaf', value: 'Esnaf' },
+        { label: 'Diğer', value: 'Diğer' },
+      ];
+      const dates= [
+        { label: 'Günde', value: 'Günde' },
+        { label: 'Haftada', value: 'Haftada' },
+        { label: 'Ayda', value: 'Ayda' },
+        { label: 'Yılda', value: 'Yılda' },
+      ];
+    // Lokasyon izni isteme ve adres bilgisi alma
     useEffect(() => {
         (async () => {
             let { status } = await Location.requestForegroundPermissionsAsync();
@@ -28,21 +58,33 @@ const Home = ({ navigation }) => {
                 return;
             }
             let currentLocation = await Location.getCurrentPositionAsync({});
+            const { latitude, longitude } = currentLocation.coords;
             setLocation({
-                latitude: currentLocation.coords.latitude,
-                longitude: currentLocation.coords.longitude,
+                latitude,
+                longitude,
                 latitudeDelta: 0.01,
                 longitudeDelta: 0.01,
             });
+
+            // Adresi tersine geokodlama
+            let reverseGeocodedAddress = await Location.reverseGeocodeAsync({
+                latitude,
+                longitude,
+            });
+            if (reverseGeocodedAddress.length > 0) {
+                const { street, city, region, postalCode, } = reverseGeocodedAddress[0];
+                setAddress(`${street}, ${city}, ${region}, ${postalCode},`);
+            }
         })();
     }, []);
-
+    let customerNumber = Math.floor(Math.random() * 1000000);
     return (
         <ScrollView>
             <View style={styles.container}>
                 <Text style={styles.title}>Sistem Kayıt Bilgileri</Text>
                 <View style={styles.formItem}>
-                    <Text style={styles.label}>Ad</Text>
+                    <Text style={styles.no}>Müşteri No: {customerNumber}</Text>
+                    <Text style={styles.label}>Ad*</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Adınızı girin"
@@ -51,7 +93,7 @@ const Home = ({ navigation }) => {
                     />
                 </View>
                 <View style={styles.formItem}>
-                    <Text style={styles.label}>Soyad</Text>
+                    <Text style={styles.label}>Soyad*</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Soyadınızı girin"
@@ -60,7 +102,7 @@ const Home = ({ navigation }) => {
                     />
                 </View>
                 <View style={styles.formItem}>
-                    <Text style={styles.label}>Telefon No</Text>
+                    <Text style={styles.label}>Telefon No*</Text>
                     <View style={styles.phoneContainer}>
                         <TextInput
                             style={styles.phoneCode}
@@ -79,7 +121,71 @@ const Home = ({ navigation }) => {
                     </View>
                 </View>
                 <View style={styles.formItem}>
-                    <Text style={styles.label}>Tabela İsmi</Text>
+                    <Text style={styles.label}>E-posta</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="E-postanızı girin (isteğe bağlı)"
+                        value={surname}
+                        onChangeText={setSurname}
+                    />
+                </View>
+                <View style={styles.formItem}>
+                <Text style={styles.label}>Restoran Tipi</Text>
+                <Dropdown
+                style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                inputSearchStyle={styles.inputSearchStyle}
+                iconStyle={styles.iconStyle}
+                data={types}
+                search={false}
+                maxHeight={300}
+                labelField="label"
+                valueField="value"
+                placeholder='Restoran Tipi Seçin'
+                placeholderStyle={{ color: 'gray' }}
+                value={type}
+                onFocus={() => setIsFocus(true)}
+                onBlur={() => setIsFocus(false)}
+                onChange={item => {
+                    setType(item.value);
+                    setIsFocus(false);
+                }}
+                />
+                </View>
+                <View style={styles.formItem}>
+                <Text style={styles.label}>Ortalama Biriktirlen Yağ Sıklığı</Text>
+                <View style={styles.date}>
+                <Dropdown
+                style={[styles.dateDropdown, isFocus && { borderColor: 'blue' }]}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                data={dates}
+                search={false}
+                maxHeight={300}
+                labelField="label"
+                valueField="value"
+                placeholder='Sıklık Seçin'
+                placeholderStyle={{ color: 'gray' }}
+                value={date}
+                onFocus={() => setIsFocus(true)}
+                onBlur={() => setIsFocus(false)}
+                onChange={item => {
+                    setDate(item.value);
+                    setIsFocus(false);
+                }}
+                />
+                <TextInput
+                        style={styles.wasteOil}
+                        placeholder="Miktar (KG)"
+                        value={wasteOil}
+                        onChangeText={setWasteOil}
+                        keyboardType='numeric'
+                    />
+                </View>
+                </View>
+                <View style={styles.formItem}>
+                    <Text style={styles.label}>Tabela İsmi*</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Tabela ismini girin"
@@ -88,34 +194,81 @@ const Home = ({ navigation }) => {
                     />
                 </View>
                 <View style={styles.formItem}>
-                    <Text style={styles.label}>Adres</Text>
+                    <Text style={styles.label}>Adres*</Text>
                     <TextInput
                         style={styles.address}
-                        placeholder="Adresinizi girin"
+                        placeholder="Adresiniz otomatik doldurulacak"
                         multiline
                         value={address}
                         onChangeText={setAddress}
                     />
+                    <InfoButton onPress={() => setChecked((checked) => !checked)}>
+                        Konumdan Bul
+                    </InfoButton>
                 </View>
-                {/* Harita bileşeni */}
-                {location && (
+                <View style={styles.formItem}>
+                    <Text style={styles.label}>Adres Tarifi*</Text>
+                    <TextInput
+                        style={styles.address}
+                        placeholder="Bina No, Çevre Tarifi vb."
+                        multiline
+                        value={secondAddress}
+                        onChangeText={setSecondAddress}
+                    />
+                </View>
+                <View>
+                </View>
+                {isChecked && (
                     <View style={styles.mapContainer}>
-                        <Text style={styles.label}>Konumunuz</Text>
-                        <MapView
-                            style={styles.map}
-                            initialRegion={location}
-                            showsUserLocation
-                        >
-                            <Marker
-                                coordinate={location}
-                                title="Şu Anki Konum"
-                                description="Buradasınız"
-                            />
-                        </MapView>
+                        {isMapLoading && (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color="#0000ff" />
+                                <Text style={styles.loadingText}>Harita yükleniyor...</Text>
+                            </View>
+                        )}
+                        {location && (
+                            <>
+                            <MapView
+                                style={styles.map}
+                                initialRegion={location}
+                                showsUserLocation
+                                onMapReady={() => setIsMapLoading(false)} // Harita yüklenince loading kaldırılır
+                            >
+                                <Marker
+                                    coordinate={location}
+                                    title="Şu Anki Konum"
+                                    description={address}
+                                />
+                            </MapView>
+                            <Text style={styles.warning}>Konumun doğruluğundan emin değilseniz, yukarıda "Adres" kısmında açık adres belirtebilirsiniz.</Text>
+                            </>
+                            
+                        )}
+                        
                     </View>
                 )}
+                <View style={styles.checkBoxContainer}>
+                <View style={styles.checkBox}>
+                        <Checkbox
+                    style={styles.checkbox}
+                    value={checkBox}
+                    onValueChange={setCheckBox}
+                    color={checkBox ? '#17a2b8' : undefined}
+                    /> 
+                    <Text style={styles.checkboxText}>Yukarıdaki bilgilerin doğruluğunu kabul ediyorum.</Text>
+                        </View>
+                        <View style={styles.checkBox}>
+                        <Checkbox
+                    style={styles.checkbox}
+                    value={conditions}
+                    onValueChange={setConditions}
+                    color={checkBox ? '#17a2b8' : undefined}
+                    /> 
+                    <Text style={styles.checkboxText}>Aydınlatma Metni'ni okudum, kabul ediyorum.</Text>
+                        </View>
+                        </View>
                 <View style={styles.buttonContainer}>
-                    <SuccessButton onPress={save}>Sonraki Adım</SuccessButton>
+                    <InfoButton onPress={save}>Bilgileri Kaydet</InfoButton>
                 </View>
             </View>
         </ScrollView>
@@ -127,7 +280,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'E7F1FA',
+        backgroundColor: '#E7F1FA',
         paddingVertical: 30,
     },
     title: {
@@ -138,10 +291,23 @@ const styles = StyleSheet.create({
     formItem: {
         marginBottom: 20,
         width: '80%',
+        gap: 4,
     },
     label: {
         marginBottom: 10,
         color: 'gray',
+    },
+    no: {
+        width: '100%',
+        textAlign: 'right',
+        marginBottom: 10,
+        color: 'gray',
+        fontSize: 16,
+    },
+    warning:{
+        color: 'red',
+        fontSize: 12,
+        textAlign: 'center',
     },
     input: {
         padding: 10,
@@ -175,7 +341,7 @@ const styles = StyleSheet.create({
     },
     address: {
         padding: 10,
-        height: 80,
+        height: 50,
         borderWidth: 1,
         borderColor: 'gray',
         borderRadius: 5,
@@ -183,14 +349,65 @@ const styles = StyleSheet.create({
     mapContainer: {
         width: '80%',
         height: 200,
-        marginBottom: 20,
-        borderRadius: 10,
-        overflow: 'hidden',
+        marginBottom: 30,
     },
     map: {
         width: '100%',
         height: '100%',
+        borderWidth: 0.4,
+        borderColor: 'gray',
+        borderRadius: 10,
     },
+    loadingContainer: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: [{ translateX: -50 }, { translateY: -50 }],
+        alignItems: 'center',
+        zIndex: 1,
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: 'gray',
+    },
+    checkBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        marginVertical: 10,
+        gap: 10,
+    },
+    checkboxText:{
+        color: 'gray',
+    },
+    dropdown: {
+        padding: 10,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+    },
+    dateDropdown: {
+        padding: 10,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        width: "38%",
+    },
+    wasteOil:{
+        padding: 12,
+        fontSize: 16,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        width: "35%",
+    },
+    date:{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    
 });
 
 export default Home;
