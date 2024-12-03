@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { auth } from '../../firebaseConfig';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 import Checkbox from 'expo-checkbox';
 import InfoButton from '../utils/InfoButton';
-import { Dropdown } from 'react-native-element-dropdown';
+import { Dropdown } from 'react-native-element-dropdown';   
 
 const Home = ({ navigation }) => {
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
+    const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [labelName, setLabelName] = useState('');
     const [address, setAddress] = useState('');
@@ -25,8 +27,28 @@ const Home = ({ navigation }) => {
     const [wasteOil, setWasteOil] = useState('');
 
     const save = async () => {
-        Alert.alert('Kaydedildi', 'Tebrikler, bilgileriniz kaydedildi.');
-        console.log(secondAddress , address);
+        if (name && surname && phone && labelName && address && secondAddress && type && date && wasteOil) {
+            try {
+                // "dgg" adında bir koleksiyona belge ekle
+                await addDoc(collection(db, "dgg"), {
+                    Ad: name,
+                    Soyad: surname,
+                    Telefon: phone,
+                    Tabela: labelName,
+                    Adres: address,
+                    AdresTarifi: secondAddress,
+                    RestoranTipi: type,
+                    BiriktirilenYağ: wasteOil + "KG",
+                    Sıklık: date, 
+                });
+                alert('Bilgileriniz Kaydedildi!!');
+            } catch (error) {
+                console.error("Hata: ", error);
+                alert('Veri kaydetme sırasında hata oluştu');
+            }
+        } else {
+            alert('Lütfen tüm alanları doldurunuz');
+        }
     };
     const types= [
         { label: 'Günlük Yemek', value: 'Günlük Yemek' },
@@ -125,15 +147,14 @@ const Home = ({ navigation }) => {
                     <TextInput
                         style={styles.input}
                         placeholder="E-postanızı girin (isteğe bağlı)"
-                        value={surname}
-                        onChangeText={setSurname}
+                        value={email}
+                        onChangeText={setEmail}
                     />
                 </View>
                 <View style={styles.formItem}>
                 <Text style={styles.label}>Restoran Tipi</Text>
                 <Dropdown
                 style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
-                placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
                 inputSearchStyle={styles.inputSearchStyle}
                 iconStyle={styles.iconStyle}
@@ -273,7 +294,7 @@ const Home = ({ navigation }) => {
             </View>
         </ScrollView>
     );
-};
+}; 
 
 const styles = StyleSheet.create({
     container: {
