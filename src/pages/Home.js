@@ -25,11 +25,11 @@ const Home = ({ navigation }) => {
     const [type, setType] = useState('');
     const [date, setDate] = useState('');
     const [wasteOil, setWasteOil] = useState('');
+    const [customerNumber, setCustomerNumber] = useState(Math.floor(Math.random() * 1000000));
 
     const save = async () => {
         if (name && surname && phone && labelName && address && secondAddress && type && date && wasteOil) {
             try {
-                // "dgg" adında bir koleksiyona belge ekle
                 await addDoc(collection(db, "dgg"), {
                     Ad: name,
                     Soyad: surname,
@@ -38,10 +38,24 @@ const Home = ({ navigation }) => {
                     Adres: address,
                     AdresTarifi: secondAddress,
                     RestoranTipi: type,
-                    BiriktirilenYağ: wasteOil + "KG",
+                    BiriktirilenYağ: wasteOil,
                     Sıklık: date, 
+                    MüşteriNo: customerNumber,
                 });
                 alert('Bilgileriniz Kaydedildi!!');
+                navigation.replace('Offer',{no: customerNumber});
+                setName('');
+                setSurname('');
+                setEmail('');
+                setPhone('');
+                setLabelName('');
+                setAddress('');
+                setSecondAddress('');
+                setType('');
+                setDate('');
+                setWasteOil('');
+                setCheckBox(false);
+                setConditions(false);
             } catch (error) {
                 console.error("Hata: ", error);
                 alert('Veri kaydetme sırasında hata oluştu');
@@ -99,7 +113,6 @@ const Home = ({ navigation }) => {
             }
         })();
     }, []);
-    let customerNumber = Math.floor(Math.random() * 1000000);
     return (
         <ScrollView>
             <View style={styles.container}>

@@ -8,6 +8,7 @@ import Vertification from './src/pages/Vertification';
 import { auth } from './firebaseConfig';
 import { signOut } from 'firebase/auth';
 import { Button, Alert } from 'react-native';
+import Offer from './src/pages/Offer';
 
 const Stack = createNativeStackNavigator();
 
@@ -51,6 +52,7 @@ export default function App() {
             }}
           />
             <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Offer" component={Offer} />
             <Stack.Screen name="Register" component={Register} />
             <Stack.Screen name="Vertification" component={Vertification} />
           </>

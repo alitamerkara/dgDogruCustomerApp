@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 5,
         alignItems: 'center',
-        width:"auto",
+        minWidth:100,
         // marginBottom: 10,
     },
     text: {
