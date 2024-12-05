@@ -60,10 +60,10 @@ const handlePress = () => {
       <Text style={styles.text}>Teklifimiz Hazır</Text>
       <Image source={require("../../assets/agreement.gif")} style={styles.gif} />
       {/* FlatList ile çekilen verileri listele */}
-      {data.map((item) => {
+      {data.map((item, index) => {
         if(item.MüşteriNo==id){
           return (
-            <View style={styles.item}>
+            <View style={styles.item} key={index}>
             <Text style={styles.itemText}>Teklifimiz</Text>
             <Text style={styles.secondText}>{tekliff(item)} ₺ <Text style={styles.subText}>/ lt</Text></Text> 
             <Text style={styles.warning}>! Teklifimiz birçok duruma göre değişkenlik gösterebilir, net bilgi için lütfen iletişime geçin.</Text>

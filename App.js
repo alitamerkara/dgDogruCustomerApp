@@ -7,8 +7,12 @@ import Register from './src/pages/Register';
 import Vertification from './src/pages/Vertification';
 import { auth } from './firebaseConfig';
 import { signOut } from 'firebase/auth';
-import { Button, Alert } from 'react-native';
+import { Button, Alert, Image } from 'react-native';
 import Offer from './src/pages/Offer';
+import Form from './src/pages/Form';
+import Slider from './src/pages/Slider';
+import SecondSlider from './src/pages/SecondSlider';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -31,32 +35,23 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        {/* {user ? (
-          // Kullanıcı giriş yaptıysa, Home ekranı
-          <Stack.Screen
-            name="Home"
-            component={Home}
-            options={{
-              headerRight: () => <Button title='Çıkış' onPress={handleSignOut} />,
-            }}
+      <Stack.Navigator screenOptions={{
+        headerTitle: () => (
+          <Image
+            source={require("./assets/dggeri.png")}
+            style={{ width: 85, height: 85, marginTop:-27 }}
+            resizeMode="contain"
           />
-        ) : (
-          // Kullanıcı giriş yapmadıysa, Login ekranı */}
-          <>
-          <Stack.Screen
-            name="Home"
-            component={Home}
-            options={{
-              headerRight: () => <Button title='Çıkış' onPress={handleSignOut} />,
-            }}
-          />
+        ),
+      }}>
+            <Stack.Screen name="Home" component={Home}/>
             <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Form" component={Form} />
+            <Stack.Screen name="Slider" component={Slider} />
+            <Stack.Screen name="SecondSlider" component={SecondSlider} />
             <Stack.Screen name="Offer" component={Offer} />
             <Stack.Screen name="Register" component={Register} />
             <Stack.Screen name="Vertification" component={Vertification} />
-          </>
-        {/* )} */}
       </Stack.Navigator>
     </NavigationContainer>
   );

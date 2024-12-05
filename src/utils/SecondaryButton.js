@@ -12,10 +12,10 @@ const SecondaryButton = ({ onPress, children }) => {
 const styles = StyleSheet.create({
     button: {
         backgroundColor: '#6c757d',
-        padding: 10,
+        padding: 12,
         borderRadius: 5,
         alignItems: 'center',
-        width:100,
+        minWidth:100,
     },
     text: {
         color: '#ffffff',
