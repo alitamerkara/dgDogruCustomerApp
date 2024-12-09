@@ -1,108 +1,177 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet, Alert, ImageBackground, Image, Button } from 'react-native';
 import { auth } from '../../firebaseConfig';
-import { signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
+import { signInWithPhoneNumber } from 'firebase/auth';
+import LinearButton from '../utils/LinearButton';
+import RoundButton from '../utils/RoundButton';
+import Feather from '@expo/vector-icons/Feather';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
+
 
 const Login = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationId, setVerificationId] = useState(null);
+  const [data, setData] = useState([]);
 
-  const sendVerification = async () => {
+  const fetchData = async () => {
     try {
-      const fullPhoneNumber = "+90" + phoneNumber; // Türkiye için +90 prefixi
-      const confirmation = await signInWithPhoneNumber(auth, fullPhoneNumber);
-      setVerificationId(confirmation.verificationId);
-      Alert.alert("Başarılı", "Doğrulama kodu gönderildi.");
+      const querySnapshot = await getDocs(collection(db, "dgg"));
+      const fetchedData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setData(fetchedData);
     } catch (error) {
-      console.error("Error:", error);
-      Alert.alert("Hata", "Bir hata oluştu. Lütfen tekrar deneyin.");
+      console.error("Error fetching data:", error);
+      Alert.alert("Hata", "Veri çekme sırasında bir hata oluştu.");
     }
   };
-
-  const handleLogin = async () => {
-    try {
-      const credential = PhoneAuthProvider.credential(verificationId, verificationCode);
-      await signInWithCredential(auth, credential);
-      Alert.alert("Başarılı", "Giriş başarılı, yönlendiriliyorsunuz.");
-      navigation.navigate("Home");
-    } catch (error) {
-      console.error("Error:", error);
-      Alert.alert("Hata", "Doğrulama kodu yanlış. Lütfen tekrar deneyin.");
+  
+  useEffect(() => {
+    fetchData();
+  }, []);
+  
+  const confirmCode = () => {
+    console.log(data)
+    const isMatch = data.some(item =>
+      String(item.Telefon) === String(phoneNumber) &&
+      String(item.MüşteriNo) === String(verificationCode)
+    );
+  
+    if (isMatch) {
+      navigation.replace('UserHome');
+    } else {
+      Alert.alert('Hata', 'Doğrulama kodu yanlış.');
     }
   };
+  
+  // const sendVerification = async () => {
+  //   if (!phoneNumber) {
+  //     Alert.alert('Hata', 'Lütfen telefon numaranızı girin.');
+  //     return;
+  //   }
+  //   try {
+  //     const confirmation = await signInWithPhoneNumber(auth, phoneNumber);
+  //     setVerificationId(confirmation.verificationId);
+  //     Alert.alert('Başarılı', 'Doğrulama kodu gönderildi.');
+  //   } catch (error) {
+  //     Alert.alert('Hata', error.message);
+  //   }
+  // };
+
+
+   // if (!verificationCode || !verificationId) {
+    //   Alert.alert('Hata', 'Lütfen doğrulama kodunu girin.');
+    //   return;
+    // }
+    // try {
+    //   const credential = firebase.auth.PhoneAuthProvider.credential(
+    //     verificationId,
+    //     verificationCode
+    //   );
+    //   await auth.signInWithCredential(credential);
+    //   Alert.alert('Başarılı', 'Telefon numarası doğrulandı.');
+    //   navigation.navigate('Home'); // Başarılı girişten sonra yönlendirme
+    // } catch (error) {
+    //   Alert.alert('Hata', 'Doğrulama kodu yanlış.');
+    // }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
-      <View style={styles.phoneNumberContainer}>
-        <Text style={styles.prefix}>+90</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Telefon Numarası"
-          onChangeText={(text) => setPhoneNumber(text.replace(/[^0-9]/g, '').slice(0, 10))}
-          keyboardType="phone-pad"
-          value={phoneNumber}
-          maxLength={10}
-        />
+    <ImageBackground source={require('../../assets/loginBg.jpg')} style={styles.background}>
+      <View style={styles.goBack}>
+        <RoundButton onPress={() => navigation.goBack()}>
+          <Feather name="arrow-left" size={30} color="white" />
+        </RoundButton>
       </View>
-      <Button title="Onay Kodu Gönder" onPress={sendVerification} />
-      {verificationId && (
-        <>
+      <View style={styles.container}>
+        <Image source={require("../../assets/dggeri.png")} style={styles.logo} />
+        <Text style={styles.title}>Telefon ile Giriş Yapın</Text>
+
+        <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Doğrulama Kodu"
-            onChangeText={setVerificationCode}
-            keyboardType="number-pad"
-            value={verificationCode}
-            maxLength={6}
+            placeholder="Telefon Numarası (+90...)"
+            onChangeText={setPhoneNumber}
+            value={phoneNumber}
+            keyboardType="phone-pad"
           />
-          <Button title="Giriş Yap" onPress={handleLogin} />
-        </>
-      )}
-      <Text style={styles.footerText}>Hesabınız yok mu? Kayıt olun.</Text>
-      <Button title="Kayıt Ol" onPress={() => navigation.navigate("Register")} />
-    </View>
+          {/* <Button title="Gönder" onPress={sendVerification} /> */}
+        </View>
+
+        <TextInput
+          style={styles.secondInput}
+          placeholder="Müşteri No"
+          onChangeText={setVerificationCode}
+          value={verificationCode}
+          keyboardType="number-pad"
+        />
+
+        <LinearButton onPress={confirmCode}>
+          Giriş Yap
+        </LinearButton>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
     padding: 16,
-    backgroundColor: '#f8f8f8',
+    marginTop: "25%",
+    gap: 16,
+    position: "relative",
+  },
+  goBack: {
+    position: 'absolute',
+    top: "5%",
+    left: 10,
+    zIndex: 1,
   },
   title: {
-    fontSize: 24,
-    marginBottom: 16,
-    textAlign: 'center',
-    color: '#333',
+    fontSize: 32,
     fontWeight: 'bold',
+    textAlign: 'center',
+    color: 'green',
+    lineHeight: 40,
+    marginBottom: 20,
+    textShadowColor: 'black',
+    textShadowRadius: 3,
   },
-  phoneNumberContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    borderColor: 'gray',
+  inputContainer: {
+    height: 40,
+    width: "90%",
+    borderColor: '#ddd',
     borderWidth: 1,
-    borderRadius: 5,
-    backgroundColor: '#fff',
-  },
-  prefix: {
-    fontSize: 18,
-    paddingHorizontal: 10,
-    color: '#000',
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#C6D2DF',
+    flexDirection: 'row',
   },
   input: {
     flex: 1,
-    height: 40,
-    paddingHorizontal: 10,
-    color: '#333',
+    paddingHorizontal: 15,
+    backgroundColor: '#C6D2DF',
   },
-  footerText: {
-    textAlign: 'center',
-    marginTop: 10,
+  secondInput: {
+    height: 40,
+    width: "90%",
+    borderRadius: 12,
+    borderColor: '#ddd',
+    paddingHorizontal: 15,
+    backgroundColor: '#C6D2DF',
+  },
+  logo: {
+    resizeMode: 'contain',
+    width: "90%",
+    height: 200,
   },
 });
 

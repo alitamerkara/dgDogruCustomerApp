@@ -1,40 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, Alert , Linking} from 'react-native';
-import InfoButton from '../utils/InfoButton';
-import SecondaryButton from '../utils/SecondaryButton';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
+import InfoButton from '../utils/InfoButton';
+import { ScrollView } from 'react-native';
 
-const Offer = ({route}) => {
+const AdminRequests = ({route}) => {
   const [data, setData] = useState([]);
-  const id= route.params?.no;  
-  const tekliff = (item) => {
-    let teklif = 0;
-    let deger = 0;
-    
-    if(item.Sıklık === "Günde"){
-      deger = 30 * Number(item.BiriktirilenYağ);
-    } else if(item.Sıklık === "Haftada"){
-      deger = 4 * Number(item.BiriktirilenYağ);
-    } else {
-      deger = Number(item.BiriktirilenYağ);
-    }
-    
-    if(deger < 1000){
-      teklif = 15;
-    } else if (deger >= 1000 && deger < 2000){
-      teklif = 20;
-    } else if (deger >= 2000){
-      teklif = 25;
-    }
-    console.log(deger, teklif)
-    return teklif;
-  };
-
+  
   const fetchData = async () => {
     try {
       // Koleksiyon adı "dgg"
-      const querySnapshot = await getDocs(collection(db, "dgg"));
+      const querySnapshot = await getDocs(collection(db, "request"));
     
       // Verileri işleme
       const fetchedData = querySnapshot.docs.map(doc => ({
@@ -52,40 +29,33 @@ const Offer = ({route}) => {
     fetchData(); // Bileşen mount olduğunda veri çekme işlemi başlat
   }, []);
 
-const handlePress = () => {
-    Linking.openURL(`tel:+905530539952`);
-}
   return (
+    <ScrollView style={styles.scroll}>
     <View style={styles.container}>
-      <Text style={styles.text}>Teklifimiz Hazır</Text>
-      <Image source={require("../../assets/agreement.gif")} style={styles.gif} />
-      {/* FlatList ile çekilen verileri listele */}
-      {data.map((item, index) => {
-        if(item.MüşteriNo==id){
-          return (
-            <View style={styles.item} key={index}>
-            <Text style={styles.itemText}>Teklifimiz</Text>
-            <Text style={styles.secondText}>{tekliff(item)} ₺ <Text style={styles.subText}>/ lt</Text></Text> 
-            <Text style={styles.warning}>! Teklifimiz birçok duruma göre değişkenlik gösterebilir, net bilgi için lütfen iletişime geçin.</Text>
-          </View>
-          )
-        }
-      })}
-      <View style={styles.buttonContainer}>
-      <InfoButton onPress={handlePress}>Ara</InfoButton>
-      <SecondaryButton onPress={() => Alert.alert("Talebiniz alındı.")}>Beni Arayın</SecondaryButton>
-      </View>
+      <Text style={styles.text}>Yağ Toplama Talepleri</Text>
+      <InfoButton onPress={()=>{console.log(data)}}>Yenile</InfoButton>
+      {data?.map((item, index) => (
+        <View style={styles.item} key={index}>
+          <Text style={styles.itemText}>{item.Tabela}</Text>
+          <Text style={styles.itemText}>{item.Adres}</Text>
+          <Text style={styles.itemText}>{item.AdresTarifi}</Text>
+        </View>
+      ))}
     </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scroll: {
+   flex: 1,
+   backgroundColor: '#E7F1FA',
+  },
   container: {
     flex: 1,
     alignItems: 'center',
     backgroundColor: '#E7F1FA',
     paddingVertical: 30,
-    
   },
   text: {
     fontSize: 24,
@@ -94,12 +64,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   item: {
-    width: '90%',
+    width: '80%',
     backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 10,
-    marginVertical: 20,
+    marginVertical: 10,
     borderRadius: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -109,7 +79,7 @@ const styles = StyleSheet.create({
 
   },
   itemText: {
-    fontSize: 24,
+    fontSize: 15,
     color: 'gray',
     textAlign: 'center',
     padding: 5,
@@ -146,4 +116,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Offer;
+export default AdminRequests;

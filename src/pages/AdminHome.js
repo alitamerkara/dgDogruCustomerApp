@@ -3,15 +3,15 @@ import InfoButton from '../utils/InfoButton';
 import SecondaryButton from '../utils/SecondaryButton';
 
 
-const Home = ({ navigation }) => {
+const AdminHome = ({ navigation }) => {
 
     return (
        <View style={styles.container}>
         <Image source={require("../../assets/dggeri.png")} style={styles.logo}/>
-        <Text style={styles.title}>Bitkisel Atık Yağ Toplama Sistemi</Text>
+        <Text style={styles.title}>Admin Paneli</Text>
         <View style={styles.buttonContainer}>
-      <InfoButton onPress={()=>{navigation.navigate("Login")}}>Müşteriyim</InfoButton>
-      <SecondaryButton onPress={() =>{navigation.navigate("Slider")}}>Müşteri Olmak İstiyorum</SecondaryButton>
+      <InfoButton onPress={()=>{navigation.navigate("AdminRequests")}}>Yağ Toplama Talepleri </InfoButton>
+      <SecondaryButton onPress={() =>{navigation.navigate("AdminNewCustomers")}}>Yeni Müşteriler</SecondaryButton>
       </View>
         </View>
     );
@@ -49,4 +49,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default Home;
+export default AdminHome;
