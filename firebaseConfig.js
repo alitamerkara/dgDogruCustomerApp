@@ -1,6 +1,6 @@
 // Gerekli Firebase ve diğer modülleri import edin
-import { initializeApp } from 'firebase/app';
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeAuth, getAuth, getReactNativePersistence, PhoneAuthProvider } from 'firebase/auth';
 import { getFirestore, initializeFirestore } from 'firebase/firestore';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -16,12 +16,22 @@ const firebaseConfig = {
 };
 
 // Firebase uygulamasını başlat
-const app = initializeApp(firebaseConfig);
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
+}
 
 // Firebase Authentication için AsyncStorage persistence ayarı
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage), // AsyncStorage kullanılarak oturum kalıcılığı sağlanıyor
-});
+let auth;
+if (!getAuth().app) {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(ReactNativeAsyncStorage), // AsyncStorage kullanılarak oturum kalıcılığı sağlanıyor
+  });
+} else {
+  auth = getAuth();
+}
 
 // Firestore örneğini oluştur ve persistence (veri kalıcılığı) özelliğini etkinleştir
 const db = initializeFirestore(app, {

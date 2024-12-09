@@ -1,49 +1,67 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { auth } from '../../firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 
 const Login = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationId, setVerificationId] = useState(null);
+
+  const sendVerification = async () => {
+    try {
+      const fullPhoneNumber = "+90" + phoneNumber; // Türkiye için +90 prefixi
+      const confirmation = await signInWithPhoneNumber(auth, fullPhoneNumber);
+      setVerificationId(confirmation.verificationId);
+      Alert.alert("Başarılı", "Doğrulama kodu gönderildi.");
+    } catch (error) {
+      console.error("Error:", error);
+      Alert.alert("Hata", "Bir hata oluştu. Lütfen tekrar deneyin.");
+    }
+  };
 
   const handleLogin = async () => {
     try {
-      // Firebase ile e-posta ve şifre doğrulama
-      await signInWithEmailAndPassword(auth, email, password);
-      Alert.alert('Başarılı', 'Giriş başarılı, yönlendiriliyorsunuz.');
-      navigation.navigate('Home'); // Home sayfasına yönlendirme
+      const credential = PhoneAuthProvider.credential(verificationId, verificationCode);
+      await signInWithCredential(auth, credential);
+      Alert.alert("Başarılı", "Giriş başarılı, yönlendiriliyorsunuz.");
+      navigation.navigate("Home");
     } catch (error) {
-      console.error('Login Error:', error.message);
-      Alert.alert('Hata', 'Giriş başarısız. Bilgilerinizi kontrol edin.');
+      console.error("Error:", error);
+      Alert.alert("Hata", "Doğrulama kodu yanlış. Lütfen tekrar deneyin.");
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="E-posta"
-        onChangeText={setEmail}
-        value={email}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Şifre"
-        onChangeText={setPassword}
-        value={password}
-        secureTextEntry
-      />
-      <Button title="Giriş Yap" onPress={handleLogin} />
-      <Text style={styles.footerText}>Henüz bir hesabınız yok mu?</Text>
-      <Button
-        title="Kayıt Ol"
-        onPress={() => navigation.navigate('Register')} // Kayıt sayfasına yönlendirme
-      />
+      <View style={styles.phoneNumberContainer}>
+        <Text style={styles.prefix}>+90</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Telefon Numarası"
+          onChangeText={(text) => setPhoneNumber(text.replace(/[^0-9]/g, '').slice(0, 10))}
+          keyboardType="phone-pad"
+          value={phoneNumber}
+          maxLength={10}
+        />
+      </View>
+      <Button title="Onay Kodu Gönder" onPress={sendVerification} />
+      {verificationId && (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Doğrulama Kodu"
+            onChangeText={setVerificationCode}
+            keyboardType="number-pad"
+            value={verificationCode}
+            maxLength={6}
+          />
+          <Button title="Giriş Yap" onPress={handleLogin} />
+        </>
+      )}
+      <Text style={styles.footerText}>Hesabınız yok mu? Kayıt olun.</Text>
+      <Button title="Kayıt Ol" onPress={() => navigation.navigate("Register")} />
     </View>
   );
 };
@@ -57,19 +75,30 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 16,
     textAlign: 'center',
     color: '#333',
+    fontWeight: 'bold',
   },
-  input: {
-    height: 40,
-    borderColor: '#ddd',
+  phoneNumberContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderColor: 'gray',
     borderWidth: 1,
-    marginBottom: 16,
-    paddingHorizontal: 10,
     borderRadius: 5,
     backgroundColor: '#fff',
+  },
+  prefix: {
+    fontSize: 18,
+    paddingHorizontal: 10,
+    color: '#000',
+  },
+  input: {
+    flex: 1,
+    height: 40,
+    paddingHorizontal: 10,
+    color: '#333',
   },
   footerText: {
     textAlign: 'center',
